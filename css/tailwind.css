@@ -38,11 +38,38 @@ input:-webkit-autofill:focus {
 }
 
 .content::before {
-  content: '';
+  content: "";
   position: absolute;
   top: 25px;
   left: -40px;
   height: 1px;
   width: 40px;
   background: black;
+}
+
+.welcome {
+  transition: background-color 1s ease;
+}
+
+.welcome div * {
+  transition: left 0.2s ease;
+  text-align: center;
+}
+
+.dot {
+  height: 5rem;
+  width: 5rem;
+  background-color: #bbb;
+  border-radius: 50%;
+  display: inline-block;
+  text-align: center;
+  z-index: 2;
+}
+
+.mask {
+  height: 5rem;
+  width: 30rem;
+  display: inline-block;
+  z-index: 1;
+  margin-left: 2.5rem;
 }
