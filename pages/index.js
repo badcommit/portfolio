@@ -6,7 +6,7 @@ import { getAllFilesFrontMatter } from '@/lib/mdx'
 import formatDate from '@/lib/utils/formatDate'
 
 import NewsletterForm from '@/components/NewsletterForm'
-import { AnimatedBy } from './animation/animation'
+import { AnimatedBy } from '../components/animation/animation'
 import Bg from './welcome'
 
 const MAX_DISPLAY = 5
