@@ -2,6 +2,9 @@
 @tailwind components;
 @tailwind utilities;
 
+* {
+  font-family: IBM Plex Mono, monospace;
+}
 .task-list-item::before {
   @apply hidden;
 }
@@ -11,7 +14,7 @@
 }
 
 .footnotes {
-  @apply pt-8 mt-12 border-t border-gray-200 dark:border-gray-700;
+  @apply mt-12 border-t border-gray-200 pt-8 dark:border-gray-700;
 }
 
 .csl-entry {
@@ -22,4 +25,24 @@
 input:-webkit-autofill,
 input:-webkit-autofill:focus {
   transition: background-color 600000s 0s, color 600000s 0s;
+}
+
+.content {
+  padding-top: 10px;
+  transform: translate3d(calc(50% + 40px), 0, 0);
+  text-align: left;
+  background: #202035;
+  color: white;
+  padding: 10px 15px;
+  border-radius: 5px;
+}
+
+.content::before {
+  content: '';
+  position: absolute;
+  top: 25px;
+  left: -40px;
+  height: 1px;
+  width: 40px;
+  background: black;
 }

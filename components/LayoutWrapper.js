@@ -1,11 +1,12 @@
 import siteMetadata from '@/data/siteMetadata'
 import headerNavLinks from '@/data/headerNavLinks'
-import Logo from '@/data/logo.svg'
+import Logo from '@/data/logo.png'
 import Link from './Link'
 import SectionContainer from './SectionContainer'
 import Footer from './Footer'
 import MobileNav from './MobileNav'
 import ThemeSwitch from './ThemeSwitch'
+import Home from '../pages'
 
 const LayoutWrapper = ({ children }) => {
   return (
@@ -16,10 +17,10 @@ const LayoutWrapper = ({ children }) => {
             <Link href="/" aria-label={siteMetadata.headerTitle}>
               <div className="flex items-center justify-between">
                 <div className="mr-3">
-                  <Logo />
+                  <img src="/static/images/logo.png" className="w-8 space-y-2" />
                 </div>
                 {typeof siteMetadata.headerTitle === 'string' ? (
-                  <div className="hidden h-6 text-2xl font-semibold sm:block">
+                  <div className="hidden h-6 align-middle text-2xl font-semibold sm:block">
                     {siteMetadata.headerTitle}
                   </div>
                 ) : (
@@ -28,7 +29,8 @@ const LayoutWrapper = ({ children }) => {
               </div>
             </Link>
           </div>
-          <div className="flex items-center text-base leading-5">
+
+          <div className="flex items-center text-base leading-5 ">
             <div className="hidden sm:block">
               {headerNavLinks.map((link) => (
                 <Link
@@ -40,10 +42,11 @@ const LayoutWrapper = ({ children }) => {
                 </Link>
               ))}
             </div>
-            <ThemeSwitch />
+            {/*<ThemeSwitch />*/}
             <MobileNav />
           </div>
         </header>
+
         <main className="mb-auto">{children}</main>
         <Footer />
       </div>
