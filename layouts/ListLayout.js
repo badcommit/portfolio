@@ -65,10 +65,7 @@ export default function ListLayout({ posts, title, initialDisplayPosts = [], pag
                       <time dateTime={date}>{formatDate(date)}</time>
                     </dd>
                     <dt className="sr-only">Haha</dt>
-                    <dd className="text-base font-medium leading-6 text-gray-500 dark:text-gray-400">
-                      {' '}
-                      dfsdfsdf
-                    </dd>
+                    <dd className="text-base font-medium leading-6 text-gray-500 dark:text-gray-400"></dd>
                   </dl>
                   <div className="space-y-3 xl:col-span-3">
                     <div>

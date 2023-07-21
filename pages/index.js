@@ -49,7 +49,7 @@ export default function Home({ posts }) {
 
                       <dt className="sr-only">Animation</dt>
                       <dd className="text-base font-medium leading-6 text-gray-500 dark:text-gray-400">
-                        {animationComponent}
+                        {/*{animationComponent}*/}
                       </dd>
                     </dl>
 
