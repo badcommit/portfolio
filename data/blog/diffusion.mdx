@@ -1,0 +1,163 @@
+---
+title: "Diffusion Models"
+date: 2023-07-07
+lastmod: "2023-07-07"
+tags: ["next-js", "tailwind", "guide"]
+draft: false
+summary: "An overview of the new features released in v1 - code block copy, multiple authors, frontmatter layout and more"
+layout: PostSimple
+bibliography: references-data.bib
+canonicalUrl: https://tailwind-nextjs-starter-blog.vercel.app/blog/new-features-in-v1/
+animation: "RollingDice"
+---
+
+## Overview
+
+Recently, diffusion model obtains a lot of attention in the deep learning community. Therefore, it is a time to learn what it is to absorb some new ideas
+
+<TOCInline toc={props.toc} exclude="Overview" toHeading={2} />
+
+## How to generate new believable image
+
+One of most common topics was how to let deep network generate picture.
+
+There are several obstacles lying forward, one is that we need to generate picture with high resolution, but we also want that the input should stay quite simple.
+
+This is essentially how to map low dimension data to high dimension data.
+
+The major problem is that we do not know what high dimension data looks like (unfortunately it is discrete)
+
+A point of low dimension will highly likely map to a missing piece of high dimension space.
+
+VAE was invented to solve this problem, which we will talk later.
+
+Another major problem is that we want something we generate to be real, and to stay close to what we see.
+
+Here the definition of "real" is quite vague. If we already know the definition of real is, from the Math point view, if it is differentialable, we have a greater chance to follow that reverse process to generate the picture.
+Kind of egg and chicken problem. It is because we need the real metric to back-propagate the loss. The generation process will imply the real metric.
+
+GAN tries to solve this problem by playing a game.
+
+## VAE
+
+The common method of mapping from low-dimension to high-dimension has been studied from day-1 of deep learning, that is to use the decoder end encoder model.
+
+Use chain of neural network to compress the input to a low dimension, and then use another chain of neural network to expand the low dimension to high dimension.
+
+However, we want to generate the new image by giving a new point of low dimension space. We still do not know whether it will be mapping into a valid high dimension point.
+
+A naive approach is to use the linear interpolation between two points of low dimension space, trying to make the low dimension space more smooth.
+
+However, what should the output and loss of this linear interpolation be? If we measure it by constructing loss using the nearest of sample point in the lower dimension as basis, the lower dimension space will be quite flat, which indicate a too strong constraint.
+
+Also, the linear interpolation highly depends on the whole training result of the encoder to calculate the nearest point, making it even harder to converge.
+
+The second thought is that if it is too hard, we can pre assume that each sample point of low dimension space will follow a some kind of distribution to see whether it works or not.
+
+The intuition is that the neighbour point should look like the mixture of near sample point.
+
+The VAE pre-assume the distribution as normal distribution as it is easy.
+
+Here, we turn the similarity problem into a probability problem.
+
+All the neighbour like one sigma away or two should have great chance to be map back with the same point.
+
+It solves this problem by sample a nearby point of the sample point, and then use the decoder to map it back to the high dimension space. The newly generated point can be thought as adding extra noise to the low dimension space.
+
+Therefore during the training process, the decoder is forced to learn a more generalized mapping to the high dimension space.
+
+$z_i \sim N(0,I)$
+
+$q_\phi (z|x) = N(\mu_\phi(x), \sigma_\phi(x))$
+
+$p\_\theta (x|z) $
+
+zi follows a normal distribution in the low dimension space. When we want to generate a new image, we just sample it.
+
+q is a neural network we want it to learn how to encode the higher dimension into the lower dimension, hereby a normal distribution. Theta represents the parameter of the neural network.
+
+The output of q phy as discussed before should be a probability, as normal distribution is easy to tackle, we let it output a mean and variance.
+
+p is the decoder trying to map the latent (the low dimension space) back to high dimension space. It can be seen as a distribution, but as we use constructing loss, VAE just ignore the variance when outputing the final generating image. So it can be treated as a deterministic function.
+
+The loss function is the sum of reconstruction loss and KL divergence.
+
+$ L(\theta, \phi) = L*{rec} + L*{reg} = -E*{x \sim {data}}[E*{z \sim q*\phi(z' | x)} p*\theta( x |z') - x] + D*{KL}(E*{x \sim {data}} q\_\phi(z | x) || N(0, I)) $
+
+$ L(\theta, \phi) = L*{rec} + L*{reg} \le L*{rec} + E*{x \sim {data}} D*{KL}( q*\phi(z | x) || N(0, I))$
+
+KL divergence is very nature way to measure the difference between two distribution. It is also easy to calculate.
+
+## GAN
+
+![GAN](/static/images/stable_diffusion/gan.png)
+
+We wish there is something we can rely on to tell us whether the generated image belongs to the same distribution as the real image, as we sample a new point from the low dimension space.
+
+Instead of VAE, using the probability of drawing the near point to let it mix two samples. We wish we have a direct tools.
+
+One of the common approach in deep learning, if we do not know the real distribution is, we create a neural network to proxy that.
+
+Therefore, a discriminator is created. It is trained by the real image and generated image. Its target is to tell whether the image is real or fake.
+
+The image generator is trained by the discriminator. It is trying to generate image that can fool the discriminator.
+
+This creates a game between the discriminator and the generator, they share a common part of nn since it needs back-propagation.
+
+$\min_G \max_D V(G, D) = E_{x \sim data}[\log D(x)] + E_{z \sim N(0, I)}[\log(1-D(G(z)))]$
+
+D is the discriminator network, G is the generator network. D should output the probability of the image is real. G should output the image.
+
+It is not hard to proof that when it comes to the equilibrium, $G^* = arg min_G max_D V(G, D)$
+
+$D_{KL}(P_{data}(x) || P_z(G^*(z)))$ should be minimized.
+
+## Diffusion Model
+
+![GAN](/static/images/stable_diffusion/diffusion.jpg)
+
+Diffusion model is somehow very similar to VAE. Instead of adding noise to the latent space, it adds noise to the image itself.
+
+By doing so it relaxes the constraint of the latent space. But adding extra efforts to the training process.
+
+The core idea is that if the model can learn how to distinguish a little noise image back to the original image, by chaining the process of adding noise, we can generate a new image from a total noise.
+
+### The forward process
+
+$q(x_t | q_{x_{t-1}}) = N(x_t; \sqrt{1-\beta_t} x_{t-1}, \beta_tI)$
+
+$q(x_{1: T} | x_0) = \prod^T q(x_t|x_{t-1})$
+
+q is the probability of generated image given the previous image. To make it a simple, it is a stotastic process complying to a normal distribution.
+
+All the steps is independent to each other, so it can be treated as markov process.
+
+$\beta$ is the variance of the normal distribution. It is a function of the time step in order to control the process of adding noise, because we do not want to add too much noise at the beginning.
+
+Since it is normal distribution, we do not actually need to calculate the x_t by following the product rules, we can save time by calculating the closed form of it.
+
+### The reverse process
+
+The model needs to train the reverse process. $ p*\theta(x*{t-1} | x*{t}) = N(x*{t-1} | \mu\_\theta(x_t, t), \beta_t)$ Since we add a little noise to the image, the reverse process could also be treated as normal distribution
+
+Instead of training a model to output a denoise image $x_{t-1}$, we train it to acknowledge the noise and output the noise. Actually, this is because the loss function will be simpler to write
+
+However, the $p_\theta$ is hard to calculate, and we need some other helps to get the training loss directly by comparing the $p$ with model generated value
+
+It is easier to calculate the $q(x_{t-1} | x_t, x_0)$ because it is equal with $q(x_{t-1} | x_t, x_0) = q(x_{t} | x_{t-1}, x_0) * q({x_{t-1}}| x_0) /  q(x_t | x_0)$
+
+we will get a equation of $\mu_\theta(x_t, t) = Ax_t + Bx_0$ since we can map $x_0$ to $x_t$ using the forward process. The $\mu_t$ could only depend on the $x_t$ and we compare this value with the output of neural network, we can train it to predict the loss
+
+## Summary
+
+These three models try to generate the image by different method.
+
+VAE does it by trying to make latent space regularized, by adding a little bit noise to it. Wishing that a regularized space can be easily mapped to the real distribution.
+
+GAN did it by creating another network to push the generated high dimension space to the real distribution, hope it makes some reasonable overlapping.
+
+Diffusion did it by creating a series of stop in the mapping process, hope that any point in the lower dimension following the process can jump to the real distribution.
+
+Generally speaking, the direct manipulation of the latent space is harder to generate the real image, because we make a lot of assumptions of the unknown distribution.
+
+More samples could lead to a great result. That's why the diffusion model is more stable.
