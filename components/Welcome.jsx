@@ -3,8 +3,8 @@ import react, { useCallback, useEffect, useMemo, useState } from "react";
 const bgColors = ["#e4b388", "#47a5aa", "#cccccc", "#5c86f9"];
 const fontColors = ["#fff685", "#000000", "#ff1d58", "#ffffff"];
 const text = [
-  "Will recession happen as predicted?",
-  "Does twitter become less censored as promised?",
+  "Will recession ever happen?",
+  "Does twitter become less censored?",
   "Will OpenAI be open again?",
   "The gamble of safe AI",
   "",
@@ -20,7 +20,7 @@ const Text = ({ index, backgroundColor, finishedCallback }) => {
       if (cursor === textLen + empty - 1) {
         finishedCallback();
       }
-    }, 150);
+    }, 100);
     return () => clearInterval(interval);
   });
 
