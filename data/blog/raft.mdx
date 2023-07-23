@@ -1,0 +1,137 @@
+---
+title: "Leadership principles but for distributed system"
+date: "2022"
+tags: ["raft", "distributed system"]
+draft: false
+summary: "raft is right, a lot"
+---
+
+# Raft
+
+[MIT cs6.824](https://pdos.csail.mit.edu/6.824/general.html) is a famous course for studying distributed system.
+
+The course project is to let student implement a raft system.
+
+## What is Raft
+
+Raft is a consensus algorithm designed to achieve fault tolerance and data consistency in distributed systems. It was introduced by Diego Ongaro and John Ousterhout in their seminal paper titled "In Search of an Understandable Consensus Algorithm" published in 2014.
+
+In distributed systems, where multiple nodes need to work together to maintain a consistent state, achieving consensus on the state of the system becomes crucial. Consensus algorithms ensure that all nodes in the system agree on the same state even in the presence of failures or network partitions.
+
+Raft is designed to be easy to understand and implement, making it a popular choice for building fault-tolerant systems. It operates based on the leader-follower model, where one node is elected as the leader, and the other nodes (followers) replicate the leader's actions to maintain consistency.
+
+## Raft Implementation
+
+The paper is given by the course website. The main focus is on the figure 2, it leads the implementation of the Raft system.
+
+![fig 2](/static/images/raft/fig2.png)
+
+[The blog](https://thesquareplanet.com/blog/students-guide-to-raft/) is extremely helpful for the implementation.
+
+As it is noted, the fig2 is precise and accurate. So basically, the implementation should follow the figure.
+
+After completing the course project, I think there are a few takeaways I wish I could remember.
+
+Basically, the first part is about how to prove the correctness of the system. The second part is about how to improve the liveness of the system.
+
+## Correctness
+
+Raft system ensures a strong consistency of the distributed system. Lab 3 will check the linearizability of commit from different clients.
+
+Therefore, it is important to know how we achieve this. In Raft paper, it proposes a few lemma to prove the correctness of the system.
+
+![lemma](/static/images/raft/correctness.png)
+
+### Election Safety: at most one leader can be elected in a term.
+
+Raft implement this by establishing following rules:
+
+First, follower should collect more than half votes to become leader.
+
+Second, the vote should persisted and vote only once for each term.
+
+This lemma can be proved by contradiction.
+
+If there are two leaders in the same term, then the term number should be the same. This means that one follower vote twice in this terms. Therefore, contradiction.
+
+To minimize the memory to record all the voting history. It is very nature to add following rule:
+
+The term is monotonically increasing.
+
+Follower will only vote for the candidate with equal or higher term.
+
+Each time, follower receives a higher term, it changes to the higher term.
+
+Therefore, each participant only need to record the latest term and vote it has seen, because it will never vote back term.
+
+It also brings tradeoff, because there will be a lot of missing leaders in past terms, maybe simply because there is one candidate crazily increase the term number.
+
+### Leader Append-Only
+
+This is enforced by the implementation protocol, which paves a way to prove the correctness of commit consistency.
+
+### Log Matching
+
+This is essentialy the most important lemma to prove the correctness of the system.
+
+The key idea is to use induction rule. Since all the partipants agree on index 0 term 0, ie empty commit. We build the first step.
+
+Because there is at most one leader for the term, and the leader never changes the past history, therefore, if we get any luck chance, they also shares the same log history previously, during that term, the series of incomming new log entries should also be agreed on. Although, some the follower might be missing the future log.
+
+Because they are just copies of the leader's log.
+
+We miss one piece of induction rule. Therefore, we enforce, the leader only append log to the follower, if the follower agrees on the previous log.
+
+This proves the lemma. So, if the follower appends the log from the leader, they should have the same log series before the new log, and all the new log from leader should be the same across all the participants.
+
+The tradeoff of this lemma is that we increase the latency of the system. Because the leader needs to wait for the follower to agree on the previous log. i.e to find a diverge point by sending a lot of network requests.
+
+### Leader Completeness
+
+The tricky part of Raft is about this lemma, what is the commit point? For fig 2, there is one important rule that states
+
+if there exists an N such that N > commitIndex, a majority of matchIndex[i] ≥ N, and log[N].term == currentTerm: set commitIndex = N
+
+These are quite a few conditions to meet. The first one is easy to understand, the commit index should be monotonically increasing.
+
+Unlike the naive thought that once more than half of the participants agree on the log entry, we can say it commits.
+
+This is not true. Because the log might be overwritten by the new leader. We get a very weak election rule any one brings a higher term can be elected as leader.
+
+But a very strong leader power, leader can overturn the log history to be its own.
+
+One straightforward way to fix this is that next elected leader should have all the committed log entries. This is not practical, because the leader might be down for a long time, we do not know the last committed log entries from leader.
+
+A relaxed rule is that the candidate should have the most recent update. Raft chooses this as it hopes can preserve the log history as much as possible.
+
+Therefore, raft enforce that follower only vote for the candidate with higher term in LOG or equal term but longer log.
+
+But this still do not promise that if more than half of the participants agree on the log entry, it commits.
+
+There is a case that the last leader copies previous extra log to more than half of particpants. The new leader do not receive that and append the entry in his new term to his log by client requests. The new leader will have newer term but he diverges the majority from the previous log.
+
+The problem is that the leader commits the previous term log entry, but the new leader do not have that log entry. Raft add the above rule to fix this that is leader can only commits the log entry that is marked with its term.
+
+An intuitive way to think is once it is marked, the majority should have this term information, therefore, they will not elect a new leader with lower diverged term.
+
+Now the committed means the leader commit index.
+
+It can be proved by contradiction, if one committed log entry miss in the new leader for the first time, because the majority votes for the new leader,
+
+and because the leader updates commit index only after majority agrees on the log entry, therefore, there is at least one participant who votes for the new leader and having that log entry.
+
+Because it votes, so the last log entry of the new leader should have newer term or equal term but longer.
+
+If they have equal term but longer, and since the previous commit this entry in previous leader term, then the new leader should include all the log entries compared with it. Lemma 2, which contradicts.
+
+If the new leader has newer term, but since he is voted by yes, he should have the previous leader term log. Otherwise, this term is not the first term that happen to diverge.
+
+Therefore he has part of previous leader term log, but in half way, it becomes leader, this is the same situation as the longer log case. Therefore, contradicts.
+
+We can see the commit flow, from leader's entry -> copy to majority -> leader update the match Index -> leader update the commit index -> follower update the commit index -> follower update the apply index
+
+### State Machine Safety
+
+It is obvious as long as the execution of the log entry is deterministic and follows the log order, the state machine will be safe.
+
+![test result](/static/images/raft/result.png)

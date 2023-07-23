@@ -1,10 +1,10 @@
 ---
-title: "Weenix another kernel exercise"
+title: "The most difficult CS course at USC?"
 date: "2022-05-12"
 lastmod: "2022-05-12"
-tags: ["kernel", "tailwind", "guide"]
+tags: ["kernel", "c"]
 draft: false
-summary: "Looking for a performant, out of the box template, with all the best in web technology to support your blogging needs? Checkout the Tailwind Nextjs Starter Blog template."
+summary: "Finding a job vs Learning hard"
 images:
   ["/static/images/canada/mountains.jpg", "/static/images/canada/toronto.jpg"]
 authors: ["default"]
@@ -12,55 +12,57 @@ authors: ["default"]
 
 <TOCInline toc={props.toc} exclude="Overview" toHeading={2} />
 
-One of the most difficult CS courses in USC for master students would be the kernel course.
+One of the most challenging courses for master's students at USC is the kernel course. The primary objective of this course is to teach students how to develop a basic kernel. The project itself is based on the curriculum from Brown University, and you can find more information about it on this link: https://brown-cs1690.github.io/brown-cs167-s22/#/
 
-The course basically is needed to write a simple kernel. The project is actually copied from Brown University. The link is here: https://brown-cs1690.github.io/brown-cs167-s22/#/
+Throughout the course, we engage in various labs that involve implementing threads, processes, file systems, and virtual memory. These labs are an essential part of the learning process, helping students gain hands-on experience with kernel development.
 
-The labs include implementation of threads and process, and file system, and the virtual memory.
-
-Since the lab is private, only some learnt lessons can be shared here.
+As the labs are private to USC, a few insights and lessons learned can be shared here. The course is likely to be an intensive and immersive experience, challenging students to delve deep into the intricacies of kernel programming and operating systems. It equips them with valuable skills and knowledge required for advanced system-level development and lays a strong foundation for their future in computer science.
 
 ## Threads and Process
 
 ### Process
 
-The first lab is to implement the threads, process and synchronization primitives.
+The first lab in the kernel course involves implementing threads, processes, and synchronization primitives.
 
-For the process data structure, in addition to some basic information, such as pid, ppid, it has some other structures to provide the abstraction.
+For the process data structure, in addition to holding basic information such as pid and ppid, it also incorporates other structures to provide abstraction.
 
-A list of child processes is used to implement the waitpid function. The implementation of waitpid is not difficult, scanning whole list of children processes, and find the exit process and destroy its kernel stack to collect child resources.
+To implement the waitpid function, a list of child processes is utilized. The waitpid implementation involves scanning the list of child processes to find the exiting process, and then the kernel stack of child process is destroyed to collect its resources.
 
-The process also needs to keep a list of open files, which is used to implement the file descriptor. The file descriptor is the abstraction of the inode in the file system. It needs to keep the offset of the file, and the inode pointer, the open mode etc.
+Moreover, the process maintains a list of open files to implement file descriptors. File descriptors abstract the inode in the file system and store information like the file's offset, inode pointer, open mode and reference count.
 
-It also needs to have a pointer to the list it waits on, e.g to wait for a process to die. Similarly, it will have a list that symbols for the list of processes that are waiting on it, which is used to implement the waitpid. When the process dies, it need to wake up all the processes that are waiting on it.
+The process data structure also requires a pointer to the list it waits on, used when waiting for a process to terminate. Similarly, it contains a list of processes that are waiting on it, which is essential for implementing the waitpid function. When the process dies, it must wake up all the processes waiting on it.
 
-Other structures are used to implement the virtual memory mapping like vmmap, brk pointer.
+Additional structures are used to handle virtual memory mapping, such as vmmap and brk pointers.
 
-A lot of list data structure are used to implement the process abstraction, and weenix provide a lot of utility functions to help the implementation.
+The implementation of the process abstraction relies heavily on list data structures, and the Weenix environment offers numerous utility functions to facilitate the implementation process. These utilities streamline the development of the process-related functionalities, making the task more manageable and efficient.
 
 ### Threads
 
-The threads have a more deliberate design, since a lot of functionalities are used to interact directly with the hardware, like switching thread context.
+The design of threads in the kernel course is more intricate, as they involve direct interaction with hardware functionalities, such as switching thread context.
 
-The thread context includes the registers, page directory, threads stack start pointer etc. Page directory is used to flush the cr3 register, and the stack pointer is used to switch the stack pointer.
+The thread context comprises registers, page directory, and the thread's stack start pointer. The page directory is utilized to flush the cr3 register, while the stack pointer is employed to switch the stack pointer.
 
-Thread also needs to have a pointer to the list it waits on, e.g to wait for a mutex, file system operation, or others
+Additionally, each thread needs to have a pointer to the list it waits on, allowing it to wait for events like mutexes, file system operations, or other synchronization primitives.
 
-One of the most important functionality is to provide context switch between different thread.
+One of the critical functionalities of threads is providing context switching between different threads. Part of this context switch is implemented through assembly code. The assembly code is responsible for saving and restoring registers and managing interrupts by disabling and enabling them.
 
-Part of the context switch is implemented by the assembly code. The assembly code is used to save the registers and restore the registers, and need to disable and enable the interrupt.
+Furthermore, the context switch requires fetching the next thread from a run queue, switching the page directory to the new thread's context, and updating the stack pointer accordingly.
 
-Other things to do is to fetch the thread from a run queue, and switch the page directory, and switch the stack pointer.
+Implementing thread functionalities involves a careful orchestration of low-level hardware interactions and data structures. It requires attention to detail and efficient use of hardware resources to ensure smooth context switching and proper synchronization among threads. The assembly code plays a crucial role in managing the state of threads during context switches, enabling the kernel to handle multitasking and efficiently execute multiple threads concurrently.
 
 ### Mutex
 
-Since the weenix only supports single core and does not support preemptive, the mutex implementation is straightforward. Just insert itself into the waitlist and switch to another thread.
+Indeed, since Weenix supports a single core and does not have preemptive multitasking, the implementation of mutexes can be relatively straightforward.
+
+When a thread tries to acquire a mutex that is already locked by another thread, it inserts itself into the waitlist associated with that mutex and then voluntarily switches to another thread. This voluntary thread switching allows other threads to continue executing while the current thread is waiting for the mutex to become available.
+
+Without preemptive multitasking, a thread will hold the mutex until it explicitly releases it. Once a thread releases the mutex, it will wake up one of the waiting threads from the waitlist, allowing that thread to acquire the mutex and proceed with its execution.
+
+The simplicity of mutex implementation in Weenix is due to the absence of preemption, where threads do not get preempted by the operating system scheduler. Instead, threads voluntarily yield control to other threads when they encounter a synchronization primitive like a mutex, making the coordination of shared resources relatively straightforward in this single-core environment.
 
 ## Virtual File System
 
-A file system is implemented based on the inode abstraction. The inode abstraction is used to represent the file, directory, and other file system objects.
-
-One difficulty here is to support polymorphism. The kernel needs to support different file system, which will have different implementation of the read, write, lookup, create, link, unlink, mkdir, rmdir, stat, getdents, etc.
+Indeed, implementing a file system based on the inode abstraction can introduce challenges, especially when supporting polymorphism. The kernel needs to accommodate different file systems, each with its own unique implementation of read, write, lookup, create, link, unlink, mkdir, rmdir, stat, getdents, and other file system operations.
 
 ```bash
 $ cat foo.txt > /home/bar.txt
@@ -70,45 +72,35 @@ $ cat foo.txt > /proc/123/mem
 
 will have different implementation of the read function.
 
-The weenix provides an extra layer of abstraction called vfs. Like inode, it has vnode data structure. Here, it binds different implementation to different file system.
+The Weenix file system introduces an additional layer of abstraction called VFS (Virtual File System), which involves the use of the vnode data structure. VFS acts as an intermediary layer, binding different file system implementations together.
 
-every vnode will have a list of function pointers, which the underlying fs should provide. The underlying fs will provide the implementation of some of its functions.
+Each vnode in VFS contains a list of function pointers that the underlying file system should provide. These function pointers represent the implementation of various file system operations. This design allows different file systems to provide their own custom implementations while adhering to a common interface.
 
-It worth to mention most the operation should operate on the concept of vnode, instead of inode. However, the kernel believes that for each file system, inode should be unique to refrain from allocation of duplicate memory.
+It is noteworthy that most kernel operations should operate on the concept of vnode rather than inode. However, the kernel ensures that each file system has a unique inode to avoid memory duplication.
 
-The kernel will maintain a global vnode table, so every time a new vnode is created for a certain fs, it will call the fs to initialize it.
+To manage vnodes effectively, the kernel maintains a global vnode table. Whenever a new vnode is created for a specific file system, the kernel calls the file system to initialize it properly.
 
-The other tricky part is to check whether a certain vnode operation will be blocked or not. There are some tradeoff here. Like marking vnode dirty or busy instead of directly writing to the disk.
+Deciding which operation could be block and handling the blocking of certain vnode operations can be complex. To mitigate this, the kernel employs various techniques such as marking vnodes as dirty or busy instead of writing to disk directly. In situations where blocking is necessary, the kernel sleeps on a specific queue and performs context switching.
 
-Whenever meet a block operation, we need to sleep on a certain queue, and do the context switch.
+Another challenging aspect of the implementation is managing the vnode reference count, which is vital for flushing inodes to disk properly. Debugging this part of the system requires considerable effort.
 
-Another tricky part is to implement the vnode reference count, since we need it to flush the inode to the disk.
+In summary, each time Weenix generates and exposes a pointer to an external function, it should increase the reference count. Conversely, when taking over a reference in some data structure and setting it to null, the reference count should be decreased.
 
-I spend some efforts to debug this part.
-
-In summary, every time it generates and exposes a pointer to outside function, it should increase the reference count, and every time we take over reference in some data structure and set it to null, we should decrease the reference count.
-
-I can see why rust is popular. It can help to avoid a lot of memory bugs and save time.
+The complexity involved in managing vnodes and inode references highlights the advantages of languages like Rust, which emphasize memory safety and help prevent common memory bugs. Rust's strict ownership model and borrow checker can significantly reduce the risk of memory-related issues and save development time in the long run. As a result, Rust has gained popularity, particularly in systems programming, where memory safety is crucial.
 
 ## Virtual Memory
 
-The whole point is to support mmap, and fork functinality.
+The primary goal of Weenix is to support mmap and COW fork functionality, making it a comprehensive operating system that can handle memory mapping and process duplication efficiently.
 
-weenix creates a memory object data structure to symbol for which underlying memory it is mapped to. It can be a file, or a anonymous memory, or a shadow (private copy of the parent memory).
+To achieve mmap functionality, Weenix introduces the memory object data structure, which represents the underlying memory mapped to a specific region. This memory object can represent various sources, including files, anonymous memory, or private shadow copies of parent memory.
 
-In the process data structure, it keeps a list of vmarea map, which just a bridge between the virtual memory address and underlying memory object.
+Within the process data structure, Weenix maintains a list of vmarea mappings. Each vmarea acts as a bridge between virtual memory addresses and the underlying memory object. It contains information such as the start address, end address, flags, and the associated memory object. This arrangement enables the kernel to efficiently find the memory object when a user space program accesses a specific area, allowing for polymorphism and flexibility in supporting different memory objects.
 
-Every vmarea will contain the start address, end address, flags, and the memory object. So when the user space program trying to read a certain area, we can find the memory object and read from it.
+To manage physical memory, Weenix uses the pframe data structure. Whenever data is written to a page, it goes through the pframe, which maintains status indicators like "dirty" or "busy" or pinned status. Other kernel module relies on pframe assistance to operate on physical memory for read and write operations. This approach allow the kernel to track pframe status and notify the underlying memory object of changes in a more efficient way, since most operation will be blocked
 
-So it supports the polymorphism of different memory object.
+Implementing mmap and fork functionality is indeed challenging due to the complexity of interactions between virtual memory, processes, file systems, and the underlying polymorphism. Debugging such complex systems can be time-consuming and demanding. For instance, one particular bug took 5 hours to debug. It was related to the shadow object used to implement the fork functionality. The bug caused kernel stack overflow due to a recursion method used while freeing the shadow object that mapped parent memory to child.
 
-weenix uses the pframe data structure to symbol for allocation of physical memory. So each time, we try to write to a page, we can write through the pframe. It has some status to symbol for whether it is dirty or busy, to act as a proxy to the underlying memory object.
-
-The memory object will need pframe help to map to the physical memory to read and write. So the user program could write data to the physical memory, and the kernel will track the pframe status to notify the underlying memory object change.
-
-The implementation of mmap and fork is very very tricky, given the involvement of the virtual memory, process, and file system, and the underlying polymorphism. One bugs I took 5 hours to debug is about the shadow object used to implement the fork.
-
-When I execute a function 300 times it is ok, but for 320, the result appears to be wrong. At the end, I found during the fork, when free the shadow object used to map the parent memory to child, I used a recursion method, therefore, the kernel stack overflows.
+In summary, the implementation of mmap and fork in Weenix is interesting and involves careful management of virtual memory, process duplication, and polymorphism with various memory objects.
 
 ![running tests](/static/images/weenix/running.png)
 
