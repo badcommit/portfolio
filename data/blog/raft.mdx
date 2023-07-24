@@ -1,9 +1,9 @@
 ---
-title: 'Leadership principles but for distributed system'
-date: '2022'
-tags: ['raft', 'distributed system']
+title: "Leadership principles but for distributed system"
+date: "2022"
+tags: ["raft", "distributed system"]
 draft: false
-summary: 'raft is right, a lot'
+summary: "raft is right, a lot"
 ---
 
 # Raft
@@ -23,7 +23,6 @@ Raft is designed to be easy to understand and implement, making it a popular cho
 ## Raft Implementation
 
 The paper is given by the course website. The main focus is on the figure 2, it leads the implementation of the Raft system.
-
 
 ![fig 2](/static/images/raft/fig2.png)
 
@@ -67,7 +66,6 @@ Therefore, each participant only need to record the latest term and vote it has 
 
 It also brings tradeoff, because there will be a lot of missing leaders in past terms, maybe simply because there is one candidate crazily increase the term number.
 
-
 ### Leader Append-Only
 
 This is enforced by the implementation protocol, which paves a way to prove the correctness of commit consistency.
@@ -78,7 +76,7 @@ This is essentialy the most important lemma to prove the correctness of the syst
 
 The key idea is to use induction rule. Since all the partipants agree on index 0 term 0, ie empty commit. We build the first step.
 
-Because there is at most one leader for the term, and the leader never changes the past history, therefore, if we get any luck chance, they also shares the same log history previously,  during that term, the series of incomming new log entries should also be agreed on. Although, some the follower might be missing the future log.
+Because there is at most one leader for the term, and the leader never changes the past history, therefore, if we get any luck chance, they also shares the same log history previously, during that term, the series of incomming new log entries should also be agreed on. Although, some the follower might be missing the future log.
 
 Because they are just copies of the leader's log.
 
@@ -106,7 +104,7 @@ One straightforward way to fix this is that next elected leader should have all 
 
 A relaxed rule is that the candidate should have the most recent update. Raft chooses this as it hopes can preserve the log history as much as possible.
 
-Therefore, raft enforce that follower only vote for the candidate with  higher term in LOG or equal term but longer log.
+Therefore, raft enforce that follower only vote for the candidate with higher term in LOG or equal term but longer log.
 
 But this still do not promise that if more than half of the participants agree on the log entry, it commits.
 
@@ -136,6 +134,7 @@ We can see the commit flow, from leader's entry -> copy to majority -> leader up
 
 It is obvious as long as the execution of the log entry is deterministic and follows the log order, the state machine will be safe.
 
-![test result](/static/images/raft/result.png)
-
-
+<div style={{ display: "flex", gap: "20" }}>
+  <img src="/static/images/raft/result.png" width="300" />
+  <img src="/static/images/raft/raft2.png" width="300" />
+</div>
