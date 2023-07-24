@@ -55,7 +55,7 @@ $z_i \sim N(0,I)$
 
 $q_\phi (z|x) = N(\mu_\phi(x), \sigma_\phi(x))$
 
-$p\_\theta (x|z) $
+$p_\theta (x|z) $
 
 zi follows a normal distribution in the low dimension space. When we want to generate a new image, we just sample it.
 
@@ -67,9 +67,9 @@ p is the decoder trying to map the latent (the low dimension space) back to high
 
 The loss function is the sum of reconstruction loss and KL divergence.
 
-$ L(\theta, \phi) = L*{rec} + L*{reg} = -E*{x \sim {data}}[E*{z \sim q*\phi(z' | x)} p*\theta( x |z') - x] + D*{KL}(E*{x \sim {data}} q\_\phi(z | x) || N(0, I)) $
+$ L(\theta, \phi) = L_{rec} + L_{reg} = -E_{x \sim {data}}[E_{z \sim q_\phi(z' | x)} p_\theta( x |z') - x] + D_{KL}(E_{x \sim {data}} q_\phi(z | x) || N(0, I)) $
 
-$ L(\theta, \phi) = L*{rec} + L*{reg} \le L*{rec} + E*{x \sim {data}} D*{KL}( q*\phi(z | x) || N(0, I))$
+$ L(\theta, \phi) = L_{rec} + L_{reg} \le L_{rec} + E_{x \sim {data}} D_{KL}( q_\phi(z | x) || N(0, I))$
 
 KL divergence is very nature way to measure the difference between two distribution. It is also easy to calculate.
 
@@ -82,10 +82,10 @@ A common approach in the DL is that if we do not know something we create a nn t
 In a GAN, two key components work in tandem: the discriminator and the generator.
 
 1. Discriminator:
-   The discriminator is a neural network trained to distinguish between real and generated images. It acts as a classifier with the target of correctly identifying whether an image is real or fake. During training, it learns to differentiate the distribution of real images from the distribution of generated images.
+The discriminator is a neural network trained to distinguish between real and generated images. It acts as a classifier with the target of correctly identifying whether an image is real or fake. During training, it learns to differentiate the distribution of real images from the distribution of generated images.
 
 2. Generator:
-   The generator, on the other hand, creates new images and aims to produce realistic images that can deceive the discriminator. It takes random noise or a latent vector as input and generates images. The generator is trained by trying to generate images that the discriminator classifies as real.
+The generator, on the other hand, creates new images and aims to produce realistic images that can deceive the discriminator. It takes random noise or a latent vector as input and generates images. The generator is trained by trying to generate images that the discriminator classifies as real.
 
 The Game:
 The generator and discriminator form a game-like interaction. As they both share a common neural network architecture (part of which is used for back-propagation), they iteratively improve their abilities. The discriminator becomes more skilled at distinguishing real images from generated ones, while the generator gets better at producing images that resemble real data.
@@ -132,7 +132,7 @@ Since it is normal distribution, we do not actually need to calculate the x_t by
 
 ### The reverse process
 
-The model needs to train the reverse process. $ p*\theta(x*{t-1} | x*{t}) = N(x*{t-1} | \mu\_\theta(x_t, t), \beta_t)$ Since we add a little noise to the image, the reverse process could also be treated as normal distribution
+The model needs to train the reverse process. $ p_\theta(x_{t-1} | x_{t}) = N(x_{t-1} | \mu_\theta(x_t, t), \beta_t)$ Since we add a little noise to the image, the reverse process could also be treated as normal distribution
 
 Instead of training a model to output a denoise image $x_{t-1}$, we train it to acknowledge the noise and output the noise. This might be because the loss function will be simpler to write
 
