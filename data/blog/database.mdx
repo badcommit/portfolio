@@ -1,0 +1,68 @@
+---
+title: BusTub - A Database Journey
+date: "2020-12-21"
+tags: ["database", "transaction", "CMU"]
+draft: false
+summary: "Implementing a database"
+---
+
+# Introduction
+
+CMU 15445 is a database system course taught by [Andy Pavlo](https://www.cs.cmu.edu/~pavlo/), and it is considered essential for anyone seeking a deeper understanding of database systems.
+
+The course includes several projects, with the ultimate objective of building a SQL engine capable of running in the terminal.
+
+<div style={{display: "flex", gap: "2px"}}>
+<img src="/static/images/cmudb/e1.png" width={"200px"}/>
+
+<img src="/static/images/cmudb/e2.png" width={"200px"}/>
+<img src="/static/images/cmudb/e2b.png" width={"200px"}/>
+<img src="/static/images/cmudb/e3.png" width={"200px"}/>
+<img src="/static/images/cmudb/e4.png" width={"200px"}/>
+</div>
+
+## Lab1: Buffer Pool Manager
+
+In the first lab of CMU 15445, students are tasked with implementing a buffer pool manager.
+
+The buffer pool manager's role is to oversee the buffer pool, which is a collection of pages currently residing in memory.
+
+One of the key responsibilities of the buffer pool manager is to fetch pages from disk into the buffer pool and also to flush pages from the buffer pool back to disk.
+
+To accomplish this, students need to learn how to implement an `ExtendibleHashTable` and a `LRUReplacer`.
+
+The extendible hashing technique offers a significant advantage: the rehashing process is incremental, allowing it to be performed in parallel with other operations. This property enhances efficiency and makes it easier to maintain consistent performance even during dynamic changes in the hash table.
+
+By successfully completing this lab, students gain hands-on experience in managing buffer pools and learn essential techniques like extendible hashing and LRU replacement, which are fundamental in the realm of database systems.
+
+<img src="/static/images/cmudb/hash.png" width={"200px"} />
+
+The image you are referring to is from Wikipedia and illustrates the concept of extendible hashing. It employs a global depth to indicate the valid bits of the hash value and a local depth to indicate the valid bits within a specific bucket.
+
+When a bucket needs to grow due to increased data, the global depth increases by 1, resulting in additional 1x space. If the bucket is not overflowed, the new bucket can simply point to the existing bucket array, reducing the need for copying data.
+
+As for the LRU-K algorithm, its primary objective is to maintain two lists: the victim list and the LRU list. When an item is accessed more times than required, it is moved to the LRU list. The LRU-K algorithm is used to manage the least recently used (LRU) items in a cache and efficiently replace them with new data based on a specific threshold "K."
+
+Both extendible hashing and the LRU-K algorithm are important techniques used in database systems to optimize memory usage and access patterns. Understanding and implementing these concepts are essential for building efficient and high-performance database systems.
+
+## Lab2: B+Tree Index
+
+The second lab in CMU 15445 focuses on implementing a B+Tree index, which is known to be the most challenging and demanding lab in the course. According to TA suggestions, only about 60% of students manage to pass this lab successfully.
+
+The difficulty arises primarily because the test cases are private, making it challenging to debug and verify the correctness of the implementation. Additionally, passing the concurrency tests adds another layer of complexity, as it requires managing concurrent access to the B+Tree index efficiently.
+
+One particular complication in this lab is the process of merging nodes within the B+Tree. Deciding whether to pick the left node or the right sibling node during the merge operation is a critical decision that can significantly impact the overall performance of the index.
+
+To ensure correctness and proper concurrency management, the sibling node information needs to be passed down appropriately when traversing down the B+Tree. This includes locking the nodes in the correct order to avoid potential race conditions and data inconsistencies.
+
+Successfully completing this lab requires a deep understanding of B+Tree data structures, concurrency control mechanisms, and careful attention to edge cases and corner scenarios. Debugging and testing are particularly challenging due to the limited visibility of private test cases, adding to the complexity and uncertainty of the process.
+
+## Lab3: Query Execution
+
+This lab is considered the easiest in CMU 15445, largely due to the generous provision of utility code by the TA. With the provided utility code, students are only required to focus on implementing the executor part, making the overall process more approachable. However, despite its ease, the lab's design still holds great value for learning purposes.
+
+![project structure](/static/images/cmudb/project-structure.svg)
+
+## Lab4: Concurrency Control
+
+Lab 4 is to implement transaction and deadlock detector. This part is not hard either, this is basically the cycle detection algorithm.
