@@ -7,9 +7,9 @@ const siteMetadata = {
   theme: "light", // system, dark or light
   siteUrl: "https://trueagi.tech/me",
   siteRepo: "https://github.com/timlrx/tailwind-nextjs-starter-blog",
-  siteLogo: "/static/images/logo.png",
-  image: "/static/images/avatar.png",
-  socialBanner: "/static/images/twitter-card.png",
+  siteLogo: "/me/static/images/logo.png",
+  image: "/me/static/images/avatar.png",
+  socialBanner: "/me/static/images/twitter-card.png",
   email: "shawnzhang1730@gmail.com",
   // github: 'https://github.com',
   // twitter: 'https://twitter.com/Twitter',
