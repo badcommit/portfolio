@@ -58,7 +58,8 @@ module.exports = withBundleAnalyzer({
   eslint: {
     dirs: ["pages", "components", "lib", "layouts", "scripts"],
   },
-  basePath: process.env.NEXT_PUBLIC_BASE_PATH,
+  basePath: "/portfolio",
+  assetPrefix: "/portfolio/",
   async headers() {
     return [
       {
